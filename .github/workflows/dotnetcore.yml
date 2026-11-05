@@ -34,7 +34,7 @@ jobs:
       - name: Generate Manifest
         run: |
           python3 -m pip install packaging
-          python3 scripts/manifest.py Jellyfin.Plugin.MetaTube/bin/Jellyfin.MetaTube@v${{ steps.shell.outputs.version }}.zip
+          python3 scripts/publish.py ${{ steps.shell.outputs.version }} --skip-build
 
       - name: Publish Manifest
         run: |
@@ -43,10 +43,13 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}
 
           git checkout --orphan dist
-          git rm -rf .
+          git rm -rf --cached . -q
+          rm -rf ./* .github .gitignore
+          cp repository/manifest.json .
           git add manifest.json
           git commit -m "Auto Updated by Actions"
           git push -f -u origin dist
+          git checkout -
 
       - name: Upload Plugins
         uses: softprops/action-gh-release@v2

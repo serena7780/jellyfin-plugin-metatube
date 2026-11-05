@@ -46,6 +46,18 @@ Jellyfin／Emby 向けに開発された、とても便利なメタデータプ�
 
 _※本プロジェクトは Jellyfin／Emby の安定版のみをサポートしています。_
 
+## プラグインリポジトリ
+
+本フォークでは、Jellyfin 12.0 以上向けの独自プラグインリポジトリを公開しています。
+**ダッシュボード → プラグイン → リポジトリ管理** から以下の URL を追加してください。
+
+```
+https://raw.githubusercontent.com/serena7780/jellyfin-plugin-metatube/dist/manifest.json
+```
+
+リポジトリの構成および新しいリリースの公開方法については
+[scripts/README.md](scripts/README.md) を参照してください。
+
 ## ドキュメント
 
 - [プラグインのインストール](https://metatube-community.github.io/wiki/plugin-installation/)

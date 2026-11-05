@@ -46,6 +46,18 @@ MetaTube Plugin for Jellyfin/Emby.
 
 _NOTE: This project will only support stable versions._
 
+## Plugin repository
+
+This fork publishes its own Jellyfin plugin repository, built for Jellyfin
+12.0 and above. Add it under **Dashboard → Plugins → Manage Repositories**:
+
+```
+https://raw.githubusercontent.com/serena7780/jellyfin-plugin-metatube/dist/manifest.json
+```
+
+See [scripts/README.md](scripts/README.md) for the repository layout and for how
+to publish a new release.
+
 ## Documentation
 
 - [Plugin installation](https://metatube-community.github.io/wiki/plugin-installation/)
