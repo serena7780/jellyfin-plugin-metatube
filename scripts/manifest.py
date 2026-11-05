@@ -25,11 +25,25 @@ def get_jellyfin_version(csproj: str) -> str:
     raise Exception("Jellyfin version not found")
 
 
+def get_target_abi(csproj: str) -> str:
+    """Return the plugin target ABI, e.g. '12.0.0'.
+
+    The Jellyfin server compares its own version against this value using
+    System.Version, so the ABI must be a plain three-part version number.
+    """
+    version = Version(get_jellyfin_version(csproj))
+    release = version.release
+    # Pad to exactly three components (major.minor.patch).
+    while len(release) < 3:
+        release = release + (0,)
+    return '.'.join(str(part) for part in release[:3])
+
+
 def generate(filename, version, csproj) -> dict:
     return {
         'checksum': md5sum(filename),
         'changelog': 'Auto Released by Actions',
-        'targetAbi': f'{get_jellyfin_version(csproj)}.0',
+        'targetAbi': get_target_abi(csproj),
         'sourceUrl': 'https://github.com/metatube-community/jellyfin-plugin-metatube/releases/download/'
                      f'v{version}/Jellyfin.MetaTube@v{version}.zip',
         'timestamp': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
