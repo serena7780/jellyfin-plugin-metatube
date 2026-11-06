@@ -1,0 +1,13 @@
+{
+  "guid": "01cc53ec-c415-4108-bbd4-a684a9801a32",
+  "name": "MetaTube",
+  "description": "MetaTube Plugin for Jellyfin/Emby.",
+  "overview": "MetaTube Plugin for Jellyfin/Emby.",
+  "owner": "MetaTube",
+  "category": "Metadata",
+  "imagePath": "thumb.png",
+  "autoUpdate": true,
+  "assemblies": [
+    "MetaTube.dll"
+  ]
+}

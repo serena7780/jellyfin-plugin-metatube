@@ -43,7 +43,12 @@
         <EmbeddedResource Include="Configuration\configPage.html"/>
     </ItemGroup>
 
-    <ItemGroup Condition="'$(Configuration)'=='Debug.Emby' or '$(Configuration)'=='Release.Emby'">
+    <!--
+      The plugin image is embedded in both the Jellyfin and the Emby builds so that
+      the server can serve it via the plugin image endpoint. Jellyfin 12 exposes the
+      image through IHasEmbeddedImage, Emby through IHasThumbImage.
+    -->
+    <ItemGroup>
         <None Remove="thumb.png"/>
         <EmbeddedResource Include="thumb.png"/>
     </ItemGroup>
@@ -56,6 +61,15 @@
         </ItemGroup>
         <Delete Files="@(FilesToDelete)"/>
         <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="@(TempZipDirectory)"/>
+        <!--
+          Ship the plugin image alongside the assembly. The server looks for a
+          "meta.json" in the plugin folder to resolve the image; a plugin image
+          file next to the assembly is picked up as the plugin's image on
+          install, and it keeps working when the plugin repository is not
+          reachable.
+        -->
+        <Copy SourceFiles="thumb.png" DestinationFolder="@(TempZipDirectory)"/>
+        <Copy SourceFiles="meta.json" DestinationFolder="@(TempZipDirectory)"/>
         <ZipDirectory SourceDirectory="@(TempZipDirectory)" DestinationFile="$(BaseOutputPath)Jellyfin.MetaTube@v$(Version).zip" Condition="'$(Configuration)'=='Release'"/>
         <ZipDirectory SourceDirectory="@(TempZipDirectory)" DestinationFile="$(BaseOutputPath)Emby.MetaTube@v$(Version).zip" Condition="'$(Configuration)'=='Release.Emby'"/>
         <RemoveDir Directories="@(TempZipDirectory)"/>

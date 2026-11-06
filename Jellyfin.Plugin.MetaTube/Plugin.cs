@@ -6,6 +6,7 @@ using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Model.Drawing;
 
 #else
+using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Common.Configuration;
@@ -21,7 +22,7 @@ public class Plugin : BasePluginSimpleUI<PluginConfiguration>, IHasThumbImage
         Instance = this;
     }
 #else
-public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
+public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasEmbeddedImage
 {
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths,
         xmlSerializer)
@@ -54,6 +55,14 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             }
         };
     }
+
+    /// <summary>
+    /// Gets the name of the embedded resource holding the plugin image.
+    /// </summary>
+    /// <remarks>
+    /// Required by the server to serve the plugin image through the plugin image endpoint.
+    /// </remarks>
+    public string ImageResourceName => $"{GetType().Namespace}.thumb.png";
 #endif
 
 #if __EMBY__
