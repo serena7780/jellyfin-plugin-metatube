@@ -101,7 +101,7 @@ def generate(archive: str, version: str, owner: str, repo: str,
              target_abi: str) -> dict:
     return {
         'checksum': md5sum(archive),
-        'changelog': 'Support Jellyfin 12.0 and above. Fix plugin image not being served.',
+        'changelog': 'Support Jellyfin 12.0 and above. Fix plugin image not being served. Retry search with all providers when a provider-scoped search fails.',
         'targetAbi': target_abi,
         'sourceUrl': 'https://github.com/%s/%s/releases/download/v%s/%s' % (
             owner, repo, version, os.path.basename(archive)),
