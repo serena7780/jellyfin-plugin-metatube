@@ -68,7 +68,7 @@ public class ActorProvider : BaseProvider, IRemoteMetadataProvider<Person, Perso
         {
             // Search actor by name.
             Logger.Info("Search for actor: {0}", info.Name);
-            searchResults.AddRange(await ApiClient.SearchActorAsync(info.Name, pid.Provider, cancellationToken));
+            searchResults.AddRange(await SearchActorAsync(info.Name, pid.Provider, cancellationToken));
         }
         else
         {
@@ -100,6 +100,27 @@ public class ActorProvider : BaseProvider, IRemoteMetadataProvider<Person, Perso
         }
 
         return results;
+    }
+
+    private async Task<List<ActorSearchResult>> SearchActorAsync(string keyword, string provider,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await ApiClient.SearchActorAsync(keyword, provider, cancellationToken);
+        }
+        catch (ApiException e)
+        {
+            // A provider-scoped search fails when the backend cannot serve the
+            // requested provider for this keyword. Retry against all providers
+            // so that a single unusable provider does not fail the whole scrape.
+            if (string.IsNullOrWhiteSpace(provider)) throw;
+
+            Logger.Warn("Actor search failed for provider {0} ({1}), retrying with all providers",
+                provider, e.Message);
+
+            return await ApiClient.SearchActorAsync(keyword, string.Empty, cancellationToken);
+        }
     }
 
     private static string FormatOverview(ActorInfo a)

@@ -207,7 +207,7 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
         {
             // Search movie by name.
             Logger.Info("Search for movie: {0}", info.Name);
-            searchResults.AddRange(await ApiClient.SearchMovieAsync(info.Name, pid.Provider, cancellationToken));
+            searchResults.AddRange(await SearchMovieAsync(info.Name, pid.Provider, cancellationToken));
         }
         else
         {
@@ -256,6 +256,28 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
         }
 
         return results;
+    }
+
+    private async Task<List<MovieSearchResult>> SearchMovieAsync(string keyword, string provider,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await ApiClient.SearchMovieAsync(keyword, provider, cancellationToken);
+        }
+        catch (ApiException e)
+        {
+            // A provider-scoped search fails when the backend cannot serve the
+            // requested provider for this keyword, e.g. the provider id format
+            // does not match the keyword. Retry against all providers so that a
+            // single unusable provider does not fail the whole scrape.
+            if (string.IsNullOrWhiteSpace(provider)) throw;
+
+            Logger.Warn("Search failed for provider {0} ({1}), retrying with all providers",
+                provider, e.Message);
+
+            return await ApiClient.SearchMovieAsync(keyword, string.Empty, cancellationToken);
+        }
     }
 
     private async Task SetActorImageUrl(PersonInfo actor, CancellationToken cancellationToken)

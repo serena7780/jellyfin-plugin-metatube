@@ -235,11 +235,11 @@ public static class ApiClient
         // EnsureSuccessStatusCode ignoring reason:
         // When the status is unsuccessful, the API response contains error details.
         if (!response.IsSuccessStatusCode && apiResponse.Error != null)
-            throw new Exception($"API request error: {apiResponse.Error.Code} ({apiResponse.Error.Message})");
+            throw new ApiException($"API request error: {apiResponse.Error.Code} ({apiResponse.Error.Message})");
 
         // Note: data field must not be null if there are no errors.
         if (apiResponse.Data == null)
-            throw new Exception("Response data field is null");
+            throw new ApiException($"API request error: {(int)response.StatusCode} ({response.ReasonPhrase})");
 
         return apiResponse.Data;
     }
