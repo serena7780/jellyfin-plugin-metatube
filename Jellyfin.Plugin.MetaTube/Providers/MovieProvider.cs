@@ -56,9 +56,27 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
             if (firstResult != null) pid = firstResult.GetPid(Plugin.ProviderId);
         }
 
+        // Nothing matched, so there is no metadata to fetch.
+        if (string.IsNullOrWhiteSpace(pid.Id) || string.IsNullOrWhiteSpace(pid.Provider))
+        {
+            Logger.Warn("Movie not found: {0}", info.Name);
+            return new MetadataResult<Movie> { HasMetadata = false };
+        }
+
         Logger.Info("Get movie info: {0}", pid.ToString());
 
-        var m = await ApiClient.GetMovieInfoAsync(pid.Provider, pid.Id, cancellationToken);
+        Metadata.MovieInfo m;
+        try
+        {
+            m = await ApiClient.GetMovieInfoAsync(pid.Provider, pid.Id, cancellationToken);
+        }
+        catch (ApiNotFoundException e)
+        {
+            // The backend no longer has this entry. Report it as not found
+            // instead of letting it surface as a provider failure.
+            Logger.Warn("Movie info not found: {0} ({1})", pid.ToString(), e.Message);
+            return new MetadataResult<Movie> { HasMetadata = false };
+        }
 
         // Preserve original title.
         var originalTitle = m.Title;
@@ -265,6 +283,12 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
         {
             return await ApiClient.SearchMovieAsync(keyword, provider, cancellationToken);
         }
+        catch (ApiNotFoundException e)
+        {
+            // Nothing matched. This is a normal outcome, not a failure.
+            Logger.Warn("Movie not found: {0} ({1})", keyword, e.Message);
+            return new List<MovieSearchResult>();
+        }
         catch (ApiException e)
         {
             // A provider-scoped search fails when the backend cannot serve the
@@ -276,7 +300,7 @@ public class MovieProvider : BaseProvider, IRemoteMetadataProvider<Movie, MovieI
             Logger.Warn("Search failed for provider {0} ({1}), retrying with all providers",
                 provider, e.Message);
 
-            return await ApiClient.SearchMovieAsync(keyword, string.Empty, cancellationToken);
+            return await SearchMovieAsync(keyword, string.Empty, cancellationToken);
         }
     }
 

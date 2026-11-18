@@ -235,7 +235,15 @@ public static class ApiClient
         // EnsureSuccessStatusCode ignoring reason:
         // When the status is unsuccessful, the API response contains error details.
         if (!response.IsSuccessStatusCode && apiResponse.Error != null)
-            throw new ApiException($"API request error: {apiResponse.Error.Code} ({apiResponse.Error.Message})");
+        {
+            // A "not found" response means the keyword simply does not match
+            // anything. Report it separately so callers can treat it as a
+            // normal outcome instead of a failure.
+            if (apiResponse.Error.Code == 404)
+                throw new ApiNotFoundException(apiResponse.Error.Code, apiResponse.Error.Message);
+
+            throw new ApiException(apiResponse.Error.Code, apiResponse.Error.Message);
+        }
 
         // Note: data field must not be null if there are no errors.
         if (apiResponse.Data == null)

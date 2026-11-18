@@ -32,9 +32,27 @@ public class ActorProvider : BaseProvider, IRemoteMetadataProvider<Person, Perso
             if (firstResult != null) pid = firstResult.GetPid(Plugin.ProviderId);
         }
 
+        // Nothing matched, so there is no metadata to fetch.
+        if (string.IsNullOrWhiteSpace(pid.Id) || string.IsNullOrWhiteSpace(pid.Provider))
+        {
+            Logger.Warn("Actor not found: {0}", info.Name);
+            return new MetadataResult<Person> { HasMetadata = false };
+        }
+
         Logger.Info("Get actor info: {0}", pid.ToString());
 
-        var m = await ApiClient.GetActorInfoAsync(pid.Provider, pid.Id, cancellationToken);
+        ActorInfo m;
+        try
+        {
+            m = await ApiClient.GetActorInfoAsync(pid.Provider, pid.Id, cancellationToken);
+        }
+        catch (ApiNotFoundException e)
+        {
+            // The backend no longer has this entry. Report it as not found
+            // instead of letting it surface as a provider failure.
+            Logger.Warn("Actor info not found: {0} ({1})", pid.ToString(), e.Message);
+            return new MetadataResult<Person> { HasMetadata = false };
+        }
 
         var result = new MetadataResult<Person>
         {
@@ -109,6 +127,12 @@ public class ActorProvider : BaseProvider, IRemoteMetadataProvider<Person, Perso
         {
             return await ApiClient.SearchActorAsync(keyword, provider, cancellationToken);
         }
+        catch (ApiNotFoundException e)
+        {
+            // Nothing matched. This is a normal outcome, not a failure.
+            Logger.Warn("Actor not found: {0} ({1})", keyword, e.Message);
+            return new List<ActorSearchResult>();
+        }
         catch (ApiException e)
         {
             // A provider-scoped search fails when the backend cannot serve the
@@ -119,7 +143,7 @@ public class ActorProvider : BaseProvider, IRemoteMetadataProvider<Person, Perso
             Logger.Warn("Actor search failed for provider {0} ({1}), retrying with all providers",
                 provider, e.Message);
 
-            return await ApiClient.SearchActorAsync(keyword, string.Empty, cancellationToken);
+            return await SearchActorAsync(keyword, string.Empty, cancellationToken);
         }
     }
 
